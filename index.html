@@ -1,50 +1,55 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAT Grid-In Generator - Thủ Khoa Đức An</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- Font Crimson Text (tương tự Minion Pro) -->
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Font Crimson Text & Playfair -->
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            navy: '#0f172a',    // Darkest Navy
-                            blue: '#1e3a8a',    // Brand Primary (Royal Blue)
-                            accent: '#2563eb',  // Brighter Blue for hover
-                            gold: '#d97706',    // Gold/Orange from Logo
+                            navy: '#0f172a',
+                            blue: '#1e3a8a',
+                            accent: '#3b82f6',
+                            gold: '#d97706',
                             goldLight: '#fbbf24',
-                            bg: '#f1f5f9'
+                            darkBg: '#020617',
                         }
                     },
                     fontFamily: {
                         serif: ['"Minion Pro"', '"Crimson Text"', 'serif'],
-                        sans: ['"Minion Pro"', '"Crimson Text"', 'serif'], // Ép dùng serif cho toàn bộ để đồng bộ
+                        display: ['"Playfair Display"', 'serif'],
+                        sans: ['"Minion Pro"', '"Crimson Text"', 'serif'], 
                     },
                     boxShadow: {
-                        'soft': '0 20px 40px -15px rgba(30, 58, 138, 0.15)',
-                        'glow': '0 0 20px rgba(37, 99, 235, 0.2)',
-                        'inner-light': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+                        'soft': '0 20px 40px -15px rgba(30, 58, 138, 0.1)',
+                        'glow': '0 0 25px rgba(59, 130, 246, 0.4)',
+                        'card': '0 15px 35px -5px rgba(0, 0, 0, 0.08)',
+                        'dark-card': '0 15px 35px -5px rgba(0, 0, 0, 0.6)',
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.4s ease-out',
+                        'fade-in': 'fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'float': 'float 8s ease-in-out infinite',
+                        'aurora': 'aurora 20s linear infinite',
+                        'border-spin': 'borderSpin 3s linear infinite',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(10px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        }
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        aurora: { '0%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' }, '100%': { backgroundPosition: '0% 50%' } },
+                        borderSpin: { '0%': { backgroundPosition: '0% 50%' }, '100%': { backgroundPosition: '100% 50%' } }
                     }
                 }
             }
@@ -52,423 +57,597 @@
     </script>
     <style>
         body {
-            background-color: #f8fafc;
-            /* Nền họa tiết học thuật */
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.05) 0%, transparent 40%);
             font-family: "Minion Pro", "Crimson Text", serif;
-            color: #1e293b;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Backgrounds */
+        .aurora-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: linear-gradient(-45deg, #f8fafc, #eff6ff, #f1f5f9, #fff7ed);
+            background-size: 400% 400%;
+            animation: aurora 25s ease infinite;
+        }
+        body.dark .aurora-bg {
+            background: linear-gradient(-45deg, #020617, #0f172a, #172554, #1e1b4b);
+            background-size: 400% 400%;
         }
 
-        .bg-grid-pattern {
-            background-image: linear-gradient(to right, #cbd5e1 1px, transparent 1px),
-                              linear-gradient(to bottom, #cbd5e1 1px, transparent 1px);
-            background-size: 40px 40px;
-            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
-            opacity: 0.15;
+        /* Premium Glass Card with Gradient Border */
+        .glass-card-container {
+            position: relative;
+            border-radius: 2.5rem;
+            padding: 2px; /* Border width */
+            background: linear-gradient(90deg, #1e3a8a, #d97706, #3b82f6, #1e3a8a);
+            background-size: 300% 100%;
+            animation: borderSpin 8s linear infinite;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.15);
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
-                0 10px 15px -3px rgba(0, 0, 0, 0.05),
-                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 2.4rem; /* Slightly less than container */
+            height: 100%;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        body.dark .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* Logo Frame */
         .logo-frame {
-            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-            box-shadow: 
-                0 10px 25px -5px rgba(30, 58, 138, 0.15),
-                0 0 0 4px rgba(255, 255, 255, 1),
-                0 0 0 6px rgba(30, 58, 138, 0.1);
+            background: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 1), 0 0 0 6px rgba(30, 58, 138, 0.15);
+        }
+        body.dark .logo-frame {
+            box-shadow: 0 0 0 4px rgba(30, 41, 59, 1), 0 0 0 6px rgba(59, 130, 246, 0.3);
+        }
+        .logo-frame::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(to bottom right, transparent, rgba(255,255,255,0.9), transparent);
+            transform: rotate(45deg) translateY(-100%);
+            animation: shine 5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes shine {
+            0% { transform: rotate(45deg) translateY(-100%); }
+            10%, 100% { transform: rotate(45deg) translateY(100%); }
         }
 
-        /* Grid box styling */
+        /* Grid Box */
         .grid-box {
-            width: 40px;
-            height: 52px;
+            width: 36px; height: 48px;
             border: 1.5px solid #cbd5e1;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             font-family: "Minion Pro", "Crimson Text", serif;
-            font-size: 1.6rem;
-            font-weight: 600;
-            background-color: white;
-            color: #334155;
+            font-size: 1.4rem; font-weight: 700;
+            background-color: white; color: #334155;
             transition: all 0.2s ease;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
-
+        body.dark .grid-box {
+            background-color: #1e293b;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
         .grid-box.filled {
-            border-color: #1e3a8a;
-            color: #1e3a8a;
-            background-color: #eff6ff;
-            box-shadow: 0 2px 6px rgba(30, 58, 138, 0.1);
+            border-color: #1e3a8a; color: #1e3a8a; background-color: #eff6ff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        body.dark .grid-box.filled {
+            border-color: #60a5fa; color: #60a5fa; background-color: #172554;
         }
 
-        /* Scrollbar */
-        textarea::-webkit-scrollbar { width: 6px; }
-        textarea::-webkit-scrollbar-track { background: transparent; }
-        textarea::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-        textarea::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+        /* Fraction Preview */
+        .fraction-preview {
+            display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 5px;
+        }
+        .fraction-preview .top { border-bottom: 1.5px solid currentColor; padding: 0 2px; line-height: 1; margin-bottom: 1px; }
+        .fraction-preview .bottom { padding: 0 2px; line-height: 1; }
 
-        /* Tooltip styling */
-        [data-tooltip]:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 4px 8px;
-            background: #1e293b;
-            color: white;
-            font-size: 12px;
-            border-radius: 4px;
-            white-space: nowrap;
-            margin-bottom: 5px;
-            opacity: 1;
+        input, textarea, button, select { font-family: "Minion Pro", "Crimson Text", serif !important; }
+        
+        /* Tooltip */
+        .shortcut-tooltip {
+            position: absolute; bottom: -24px; right: 0; font-size: 10px; 
+            color: #94a3b8; font-style: italic; opacity: 0; transition: opacity 0.2s;
             pointer-events: none;
         }
+        .group:hover .shortcut-tooltip { opacity: 1; }
 
-        /* Force fonts */
-        input, textarea, button, select {
-            font-family: "Minion Pro", "Crimson Text", serif !important;
+        /* Print Styles */
+        @media print {
+            @page { margin: 1.5cm; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; }
+            .no-print, .fixed, .aurora-bg, #historySection, #errorMessage, .glass-card-container { display: none !important; }
+            .glass-card { box-shadow: none !important; border: none !important; backdrop-filter: none !important; background: transparent !important; margin: 0 !important; padding: 0 !important; }
+            #outputSection { display: block !important; }
+            .print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; text-align: center; }
+            .print-logo { width: 80px; height: 80px; border-radius: 50%; border: 1px solid #ccc; }
+            #resultsContainer > div { break-inside: avoid; border: 1px solid #eee; margin-bottom: 15px; box-shadow: none !important; }
+            .grid-box { border-color: #000 !important; color: #000 !important; }
+            .grid-box.filled { background-color: #f0f0f0 !important; }
+            input[readonly] { border: none !important; background: transparent !important; padding: 0 !important; font-weight: bold; }
+            /* Force show glass card content without glass effect */
+            .glass-card-container { display: block !important; background: none !important; padding: 0 !important; animation: none !important; box-shadow: none !important; }
         }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+        body.dark ::-webkit-scrollbar-thumb { background-color: #475569; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-10 px-4">
+<body class="min-h-screen flex flex-col items-center py-8 px-4">
 
-    <!-- Background Decoration -->
-    <div class="fixed inset-0 bg-grid-pattern z-[-1] pointer-events-none"></div>
+    <!-- Background -->
+    <div class="aurora-bg"></div>
 
-    <div class="glass-card w-full max-w-3xl rounded-3xl shadow-soft overflow-hidden relative">
-        
-        <!-- Header Branding Area -->
-        <div class="relative bg-gradient-to-b from-white to-slate-50/50 pt-10 pb-8 px-8 border-b border-slate-100 flex flex-col items-center">
-             <!-- Decorative Top Gradient Line -->
-            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-blue via-brand-gold to-brand-blue"></div>
+    <!-- Top Controls -->
+    <div class="fixed top-6 right-6 z-50 flex gap-3 no-print">
+        <button onclick="toggleSettings()" class="w-11 h-11 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-brand-blue hover:scale-110 transition-transform shadow-md cursor-pointer border border-white/50" title="Cài đặt">
+            <i class="fa-solid fa-gear"></i>
+        </button>
+        <button onclick="toggleRules()" class="w-11 h-11 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md flex items-center justify-center text-brand-blue dark:text-blue-400 hover:scale-110 transition-transform shadow-md cursor-pointer border border-white/50" title="Quy tắc SAT">
+            <i class="fa-solid fa-book-open"></i>
+        </button>
+        <button onclick="toggleTheme()" class="w-11 h-11 rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-yellow-400 hover:scale-110 transition-transform shadow-md cursor-pointer border border-white/50">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:block"></i>
+        </button>
+    </div>
+
+    <!-- Main Card Container with Animated Border -->
+    <div class="glass-card-container w-full max-w-4xl mt-8 mb-8 animate-float">
+        <div class="glass-card overflow-hidden relative">
             
-            <!-- Logo in Round Frame -->
-            <div class="relative mb-5 group cursor-pointer">
-                <div class="w-32 h-32 rounded-full logo-frame p-1 flex items-center justify-center overflow-hidden transition-transform duration-500 group-hover:scale-105">
-                    <img src="https://d21acfi38wn3iy.cloudfront.net/resource/documents/9d2dd8b7-2de4-4dea-9c36-f8a2abc3dece/1761724790727-anh-group-fb-png.png" 
-                         alt="Logo SAT Thủ Khoa Đức An" 
-                         class="w-full h-full object-cover rounded-full">
+            <!-- Print Header -->
+            <div class="print-header hidden">
+                <div class="flex items-center justify-center gap-4">
+                    <img src="https://d21acfi38wn3iy.cloudfront.net/resource/documents/9d2dd8b7-2de4-4dea-9c36-f8a2abc3dece/1761724790727-anh-group-fb-png.png" class="print-logo">
+                    <div class="text-left">
+                        <h1 class="text-2xl font-bold uppercase">Answer Key - Grid In</h1>
+                        <p class="text-sm italic">SAT Math - Thủ Khoa Đức An</p>
+                    </div>
                 </div>
-                <!-- Subtle glow behind logo -->
-                <div class="absolute inset-0 rounded-full bg-brand-blue/20 blur-xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             </div>
-            
-            <div class="text-center space-y-1">
-                <h1 class="text-3xl font-bold text-brand-blue tracking-wide drop-shadow-sm">CÔNG CỤ TẠO ĐÁP ÁN GRID-IN</h1>
-                <p class="text-slate-500 italic text-xl">SAT Math Student-Produced Response Tool</p>
-            </div>
-        </div>
 
-        <div class="p-8 md:p-10 space-y-8">
-            <!-- Input Section -->
-            <div class="relative group z-20">
-                <div class="flex justify-between items-end mb-3 ml-1">
-                    <label class="block text-brand-navy font-bold text-lg uppercase tracking-wider">
-                        Nhập đáp án gốc
-                    </label>
-                    <span class="text-slate-400 text-sm italic">Hỗ trợ: Phân số (2/3) & Số thập phân (-1.5)</span>
+            <!-- Header -->
+            <div class="relative pt-10 pb-6 px-8 flex flex-col items-center border-b border-slate-200/50 dark:border-slate-700/50 no-print">
+                <div class="relative mb-5 group cursor-pointer">
+                    <div class="w-32 h-32 rounded-full logo-frame p-1 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
+                        <img src="https://d21acfi38wn3iy.cloudfront.net/resource/documents/9d2dd8b7-2de4-4dea-9c36-f8a2abc3dece/1761724790727-anh-group-fb-png.png" 
+                             alt="Logo SAT Thủ Khoa Đức An" 
+                             class="w-full h-full object-cover rounded-full bg-white">
+                    </div>
                 </div>
                 
-                <div class="flex shadow-lg shadow-blue-900/5 rounded-2xl overflow-hidden transition-all duration-300 ring-1 ring-slate-200 group-focus-within:ring-2 group-focus-within:ring-brand-blue group-focus-within:shadow-glow bg-white relative">
-                    <div class="relative flex-grow">
-                        <input type="text" id="inputVal" 
-                            placeholder="VD: 2/3, 7/2, -1.5..." 
-                            class="w-full h-16 px-6 text-3xl text-brand-blue placeholder-slate-300 bg-transparent border-none focus:ring-0 focus:outline-none"
-                            oninput="checkInput()"
-                            onkeypress="handleEnter(event)">
-                        
-                        <!-- Clear Button (Hidden by default) -->
-                        <button id="clearBtn" onclick="clearInput()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-400 transition-colors hidden">
-                            <i class="fa-solid fa-circle-xmark text-xl"></i>
+                <div class="text-center space-y-1">
+                    <h1 class="text-3xl md:text-4xl font-bold text-brand-blue dark:text-blue-400 tracking-wide drop-shadow-sm uppercase font-display">Công Cụ Tạo Đáp Án Grid-In</h1>
+                    <p class="text-slate-500 dark:text-slate-400 italic text-xl">SAT Math Student-Produced Response Tool</p>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-10 space-y-8">
+                <!-- Mode Switcher -->
+                <div class="flex justify-between items-center mb-2 no-print">
+                    <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl inline-flex relative shadow-inner">
+                        <div id="modeIndicator" class="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-slate-600 rounded-lg shadow-sm transition-all duration-300"></div>
+                        <button onclick="setMode('single')" class="relative z-10 px-5 py-2 rounded-lg font-bold text-sm transition-colors duration-300 flex items-center gap-2 text-brand-blue dark:text-white" id="btnSingle">
+                            <i class="fa-solid fa-pen"></i> Đơn lẻ
+                        </button>
+                        <button onclick="setMode('batch')" class="relative z-10 px-5 py-2 rounded-lg font-bold text-sm transition-colors duration-300 flex items-center gap-2 text-slate-500 dark:text-slate-400" id="btnBatch">
+                            <i class="fa-solid fa-list-ol"></i> Hàng loạt
                         </button>
                     </div>
                     
-                    <button onclick="generateAnswers()" class="bg-brand-blue hover:bg-brand-accent text-white px-8 transition-all duration-300 flex items-center gap-3 group/btn relative overflow-hidden">
-                        <div class="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
-                        <span class="font-bold text-xl relative z-10">Tạo</span>
-                        <i class="fa-solid fa-wand-magic-sparkles text-brand-gold group-hover/btn:rotate-12 transition-transform text-lg relative z-10"></i>
+                    <button onclick="window.print()" class="text-brand-blue dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 px-4 py-2 rounded-lg transition-colors font-bold text-sm flex items-center gap-2 border border-transparent hover:border-blue-100 dark:hover:border-blue-800">
+                        <i class="fa-solid fa-print"></i> PDF
                     </button>
                 </div>
-                
-                <div class="mt-3 flex items-start gap-2 text-slate-500 text-base px-1 italic">
-                    <i class="fa-solid fa-circle-info text-brand-gold mt-1"></i>
-                    <span>Hệ thống tự động tính toán các biến thể làm tròn (Round) & cắt bớt (Truncate) chuẩn SAT.</span>
+
+                <!-- Input Section -->
+                <div class="relative group z-20 no-print">
+                    <!-- Smart Suggestion Bubble -->
+                    <div id="smartSuggestion" class="hidden absolute -top-10 left-4 bg-brand-gold text-white px-3 py-1 rounded-lg shadow-lg text-sm font-bold cursor-pointer animate-bounce z-30" onclick="applySuggestion()">
+                        <i class="fa-solid fa-lightbulb text-yellow-200 mr-1"></i> <span id="suggestionText"></span>
+                    </div>
+
+                    <!-- Single Input -->
+                    <div id="singleInputContainer" class="block">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-grow shadow-lg shadow-blue-900/5 dark:shadow-none rounded-2xl overflow-hidden transition-all duration-300 ring-1 ring-slate-200 dark:ring-slate-700 group-focus-within:ring-2 group-focus-within:ring-brand-blue bg-white dark:bg-slate-800 relative h-20 flex items-center">
+                                 <!-- Math Preview -->
+                                <div id="mathPreview" class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-2xl font-serif pointer-events-none opacity-50 transition-opacity"></div>
+                                
+                                <input type="text" id="inputVal" 
+                                    placeholder="VD: 4/6, 3.5..." 
+                                    class="w-full h-full px-8 pl-8 text-3xl text-brand-blue dark:text-blue-300 placeholder-slate-300 dark:placeholder-slate-600 bg-transparent border-none focus:ring-0 focus:outline-none font-bold"
+                                    oninput="checkInput(); updateMathPreview(this.value); autoCorrectInput(this); checkSmartSuggestion(this.value);"
+                                    onkeydown="checkShortcuts(event, 'single')">
+                                <button id="clearBtn" onclick="clearInput()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 hidden w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                    <i class="fa-solid fa-xmark text-xl"></i>
+                                </button>
+                            </div>
+                            <button onclick="generateAnswers()" class="bg-brand-blue hover:bg-brand-accent text-white px-8 md:px-10 h-20 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 group/btn relative overflow-hidden shadow-lg shadow-blue-900/20 active:scale-95">
+                                <span class="font-bold text-xl relative z-10">TẠO</span>
+                                <i class="fa-solid fa-wand-magic-sparkles text-brand-gold group-hover/btn:rotate-12 transition-transform text-lg relative z-10"></i>
+                                <span class="shortcut-tooltip">Press Enter</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Batch Input -->
+                    <div id="batchInputContainer" class="hidden">
+                         <div class="relative shadow-lg shadow-blue-900/5 dark:shadow-none rounded-2xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 group-focus-within:ring-2 group-focus-within:ring-brand-blue bg-white dark:bg-slate-800">
+                            <textarea id="batchInputVal" 
+                                placeholder="Dán danh sách đáp án vào đây (mỗi dòng một số)&#10;VD:&#10;2/3&#10;0.5&#10;-4" 
+                                class="w-full p-6 text-xl text-brand-blue dark:text-blue-300 placeholder-slate-300 dark:placeholder-slate-600 bg-transparent border-none focus:ring-0 focus:outline-none font-mono leading-relaxed resize-y min-h-[160px]"
+                                oninput="autoCorrectInput(this)"
+                                onkeydown="checkShortcuts(event, 'batch')"></textarea>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 flex justify-between items-center border-t border-slate-100 dark:border-slate-700">
+                                 <span class="text-xs text-slate-400 italic px-2">Ctrl + Enter để tạo</span>
+                                 <button onclick="generateBatchAnswers()" class="bg-brand-blue hover:bg-brand-accent text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-md hover:-translate-y-0.5">
+                                    <span class="font-bold">Xử lý hàng loạt</span>
+                                    <i class="fa-solid fa-bolt text-brand-gold"></i>
+                                </button>
+                            </div>
+                         </div>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Output Section -->
-            <div id="outputSection" class="hidden space-y-8 animate-fade-in">
                 
-                <!-- Main Result String -->
-                <div class="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-6 border border-slate-200 relative overflow-hidden shadow-inner">
-                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <i class="fa-solid fa-quote-right text-7xl text-brand-blue"></i>
-                    </div>
-
-                    <div class="flex justify-between items-end mb-3 relative z-10">
-                        <label class="text-brand-blue font-bold text-base uppercase flex items-center gap-2">
-                            <i class="fa-solid fa-code text-brand-gold"></i>
-                            Chuỗi kết quả (Copy-paste)
-                        </label>
-                        <span id="copyStatus" class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold uppercase opacity-0 transition-all transform translate-y-2 border border-green-200 shadow-sm">
-                            <i class="fa-solid fa-check mr-1"></i> Đã sao chép!
-                        </span>
-                    </div>
-                    
-                    <div class="relative group z-10">
-                        <textarea id="resultString" readonly 
-                            class="w-full bg-white border border-slate-200 rounded-xl p-5 text-xl text-slate-700 break-all h-32 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/20 transition-all resize-none shadow-sm leading-relaxed font-mono cursor-pointer hover:bg-slate-50"
-                            onclick="copyToClipboard()"
-                            title="Bấm để copy toàn bộ"></textarea>
-                        
-                        <button onclick="copyToClipboard()" class="absolute bottom-4 right-4 bg-brand-navy hover:bg-black text-white px-5 py-2 rounded-lg text-base font-bold shadow-lg transition-all flex items-center gap-2 opacity-90 hover:opacity-100 hover:-translate-y-0.5 active:scale-95">
-                            <i class="fa-regular fa-copy"></i>
-                            <span>Copy All</span>
-                        </button>
-                    </div>
+                <!-- Quick Actions Bar -->
+                <div id="batchActions" class="hidden flex justify-between items-center no-print bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                     <h3 class="text-slate-600 dark:text-slate-300 font-bold uppercase text-sm tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-brand-blue"></i> Kết quả (<span id="resultCount">0</span>)
+                     </h3>
+                     <button onclick="copyAllBatch()" class="text-brand-blue dark:text-blue-400 hover:text-white hover:bg-brand-blue font-bold text-sm flex items-center gap-2 bg-white dark:bg-slate-800 border border-brand-blue/20 px-4 py-2 rounded-lg transition-all shadow-sm">
+                         <i class="fa-regular fa-copy"></i> Copy cho Excel
+                     </button>
                 </div>
 
-                <!-- Preview Grid List -->
-                <div class="pt-2">
-                    <h3 class="text-brand-navy font-bold text-2xl mb-6 flex items-center gap-3 border-b border-slate-200 pb-3">
-                        <span class="bg-gradient-to-br from-brand-gold to-yellow-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-base shadow-md">
-                            <i class="fa-solid fa-list-check"></i>
-                        </span>
-                        Chi tiết phương án (Click dòng để copy)
-                    </h3>
-                    
-                    <div id="gridList" class="grid grid-cols-1 gap-4">
-                        <!-- Grid items will be injected here via JS -->
+                <!-- Output Section -->
+                <div id="outputSection" class="hidden space-y-6 animate-fade-in">
+                    <!-- Results Container -->
+                    <div id="resultsContainer" class="space-y-6"></div>
+                </div>
+                
+                <!-- History Section -->
+                <div id="historySection" class="hidden pt-8 border-t border-slate-200 dark:border-slate-700 animate-slide-up no-print">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-slate-500 dark:text-slate-400 font-bold text-lg uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="exportHistory()" class="text-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-download"></i> .txt
+                            </button>
+                            <button onclick="clearHistory()" class="text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                                Xóa
+                            </button>
+                        </div>
                     </div>
+                    <div id="historyList" class="space-y-2 opacity-90 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
+
+                <!-- Error Toast -->
+                <div id="errorMessage" class="hidden p-4 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-800 flex items-center gap-3 animate-pulse no-print">
+                    <i class="fa-solid fa-circle-exclamation text-xl"></i>
+                    <span id="errorText" class="font-bold text-lg"></span>
                 </div>
             </div>
             
-            <!-- History Section (New Feature) -->
-            <div id="historySection" class="hidden pt-6 border-t border-dashed border-slate-300 animate-slide-up">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-slate-500 font-bold text-lg uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử tra cứu
-                    </h3>
-                    <button onclick="clearHistory()" class="text-sm text-red-500 hover:text-red-700 hover:underline font-bold transition-colors">
-                        Xóa lịch sử
-                    </button>
+            <!-- Footer -->
+            <div class="bg-slate-50/90 dark:bg-slate-900/90 p-8 text-center border-t border-slate-200 dark:border-slate-800 backdrop-blur-md no-print">
+                <div class="flex flex-wrap justify-center gap-4 mb-6">
+                    <a href="https://www.facebook.com/nghiemducan.10/" target="_blank" class="flex items-center gap-2 px-5 py-2.5 bg-[#1877F2] hover:bg-[#0d65d9] text-white rounded-full font-bold text-sm transition-all shadow-md hover:-translate-y-1">
+                        <i class="fa-brands fa-facebook text-lg"></i> Thầy Nghiêm Đức An
+                    </a>
+                    <a href="https://zalo.me/0812358277" target="_blank" class="flex items-center gap-2 px-5 py-2.5 bg-[#0068FF] hover:bg-[#0056d6] text-white rounded-full font-bold text-sm transition-all shadow-md hover:-translate-y-1">
+                        <span class="bg-white text-[#0068FF] w-5 h-5 rounded flex items-center justify-center font-bold text-[10px] shadow-sm font-sans">Z</span> Zalo: 081.235.8277
+                    </a>
                 </div>
-                <div id="historyList" class="space-y-2 opacity-80">
-                    <!-- History items injected here -->
-                </div>
+                <p class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest flex justify-center items-center gap-2">
+                    SAT Digital Tools <span class="w-1.5 h-1.5 bg-brand-gold rounded-full"></span> Thủ Khoa Đức An
+                </p>
             </div>
-
-            <!-- Error Message -->
-            <div id="errorMessage" class="hidden mt-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 flex items-start gap-3 shadow-sm animate-pulse">
-                <i class="fa-solid fa-circle-exclamation mt-1 text-red-500"></i>
-                <div>
-                    <h4 class="font-bold text-base uppercase mb-1">Lỗi nhập liệu</h4>
-                    <span id="errorText" class="text-lg"></span>
-                </div>
-            </div>
-
-        </div>
-        
-        <!-- Footer -->
-        <div class="bg-slate-50/90 p-6 text-center border-t border-slate-100 backdrop-blur-md rounded-b-3xl">
-            
-            <!-- Contact Buttons -->
-            <div class="flex flex-wrap justify-center gap-4 mb-6">
-                <a href="https://www.facebook.com/nghiemducan.10/" target="_blank" 
-                   class="flex items-center gap-2 px-6 py-3 bg-[#1877F2] hover:bg-[#0d65d9] text-white rounded-full font-bold text-base transition-all shadow-md hover:shadow-blue-200 hover:-translate-y-1 group border border-blue-400/20">
-                    <i class="fa-brands fa-facebook text-xl group-hover:scale-110 transition-transform"></i>
-                    <span>Thầy Nghiêm Đức An</span>
-                </a>
-                
-                <a href="https://zalo.me/0812358277" target="_blank" 
-                   class="flex items-center gap-2 px-6 py-3 bg-[#0068FF] hover:bg-[#0056d6] text-white rounded-full font-bold text-base transition-all shadow-md hover:shadow-blue-200 hover:-translate-y-1 group border border-blue-400/20">
-                    <div class="bg-white text-[#0068FF] w-6 h-6 rounded flex items-center justify-center font-bold text-[10px] leading-none group-hover:scale-110 transition-transform font-sans shadow-sm">Z</div>
-                    <span>Zalo: 081.235.8277</span>
-                </a>
-            </div>
-
-            <p class="text-slate-400 text-sm font-bold uppercase tracking-widest flex justify-center items-center gap-2 opacity-70">
-                <span>SAT Digital Tools</span>
-                <span class="w-1.5 h-1.5 bg-brand-gold rounded-full"></span>
-                <span>Thủ Khoa Đức An</span>
-            </p>
         </div>
     </div>
     
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 translate-y-10 z-50">
-        <i class="fa-solid fa-check-circle text-green-400"></i>
-        <span id="toastMsg" class="font-bold">Đã copy!</span>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center px-4 no-print">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleSettings()"></div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md relative z-10 transform transition-all scale-100 p-6 border border-slate-200 dark:border-slate-700 animate-slide-up">
+            <h3 class="text-xl font-bold text-brand-navy dark:text-white mb-4 border-b pb-2 dark:border-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-gear text-slate-400"></i> Cài Đặt
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Dấu ngăn cách đáp án</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setDelimiter('//')" id="delim_//" class="delim-btn p-2 border rounded-lg text-center font-mono hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-blue-50 border-brand-blue text-brand-blue dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300">//</button>
+                        <button onclick="setDelimiter(';')" id="delim_;" class="delim-btn p-2 border rounded-lg text-center font-mono hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-slate-200 dark:border-slate-700">;</button>
+                        <button onclick="setDelimiter('|')" id="delim_|" class="delim-btn p-2 border rounded-lg text-center font-mono hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-slate-200 dark:border-slate-700">|</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="toggleSettings()" class="text-slate-500 hover:text-slate-700 font-bold text-sm">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rulesModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center px-4 no-print">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="toggleRules()"></div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg relative z-10 transform transition-all scale-100 p-8 border border-slate-200 dark:border-slate-700 animate-slide-up">
+            <button onclick="toggleRules()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-2xl font-bold text-brand-navy dark:text-white mb-6 text-center border-b pb-4 dark:border-slate-700">Quy Tắc SAT Grid-In</h3>
+            <div class="space-y-4 text-slate-700 dark:text-slate-300 text-lg">
+                <p><strong class="text-brand-blue dark:text-blue-400">1. Rút gọn phân số:</strong> Hệ thống tự động rút gọn (VD: 4/6 -> 2/3).</p>
+                <p><strong class="text-brand-blue dark:text-blue-400">2. Số thập phân vô hạn:</strong> Phải điền kín ô (Fill the box). VD: 2/3 -> 0.666, 0.667.</p>
+                <p><strong class="text-brand-blue dark:text-blue-400">3. Giới hạn ký tự:</strong> 5 ký tự (số dương), 6 ký tự (số âm).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 opacity-0 translate-y-10 z-[70] no-print">
+        <i class="fa-solid fa-circle-check text-green-400 dark:text-green-600 text-xl"></i>
+        <span id="toastMsg" class="font-bold text-lg">Đã copy!</span>
     </div>
 
     <script>
+        // State
         let historyData = [];
+        let delimiter = "//";
+        let currentMode = "single";
+        let suggestedVal = "";
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') {
-                generateAnswers();
+        // --- Theme & Init ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark'); localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark'); localStorage.setItem('theme', 'dark');
+            }
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // --- UI Logic ---
+        function setMode(mode) {
+            currentMode = mode;
+            const indicator = document.getElementById('modeIndicator');
+            const singleContainer = document.getElementById('singleInputContainer');
+            const batchContainer = document.getElementById('batchInputContainer');
+            const btnSingle = document.getElementById('btnSingle');
+            const btnBatch = document.getElementById('btnBatch');
+            const batchActions = document.getElementById('batchActions');
+
+            if (mode === 'single') {
+                indicator.style.left = '4px';
+                singleContainer.classList.remove('hidden');
+                batchContainer.classList.add('hidden');
+                batchActions.classList.add('hidden');
+                btnSingle.classList.replace('text-slate-500', 'text-brand-blue'); btnSingle.classList.add('dark:text-white');
+                btnBatch.classList.replace('text-brand-blue', 'text-slate-500'); btnBatch.classList.remove('dark:text-white');
+                document.getElementById('outputSection').classList.add('hidden');
+            } else {
+                indicator.style.left = '50%';
+                singleContainer.classList.add('hidden');
+                batchContainer.classList.remove('hidden');
+                btnBatch.classList.replace('text-slate-500', 'text-brand-blue'); btnBatch.classList.add('dark:text-white');
+                btnSingle.classList.replace('text-brand-blue', 'text-slate-500'); btnSingle.classList.remove('dark:text-white');
+                document.getElementById('outputSection').classList.add('hidden');
             }
         }
 
         function checkInput() {
             const val = document.getElementById('inputVal').value;
-            const clearBtn = document.getElementById('clearBtn');
-            if (val.length > 0) clearBtn.classList.remove('hidden');
-            else clearBtn.classList.add('hidden');
+            document.getElementById('clearBtn').classList.toggle('hidden', val.length === 0);
+        }
+
+        function autoCorrectInput(el) {
+            if (el.value.includes(',')) {
+                const cursor = el.selectionStart;
+                el.value = el.value.replace(/,/g, '.');
+                el.setSelectionRange(cursor, cursor);
+            }
+        }
+        
+        function updateMathPreview(val) {
+            const preview = document.getElementById('mathPreview');
+            const inputEl = document.getElementById('inputVal');
+            
+            if (val.includes('/')) {
+                const parts = val.split('/');
+                if (parts.length === 2 && parts[0] && parts[1]) {
+                     preview.innerHTML = `<span class="fraction-preview"><span class="top">${parts[0]}</span><span class="bottom">${parts[1]}</span></span>`;
+                     preview.classList.remove('opacity-0');
+                     inputEl.style.paddingLeft = "55px"; 
+                     return;
+                }
+            }
+            preview.innerHTML = '';
+            preview.classList.add('opacity-0');
+            inputEl.style.paddingLeft = "2rem"; 
+        }
+
+        function checkSmartSuggestion(val) {
+            const suggestion = document.getElementById('smartSuggestion');
+            const text = document.getElementById('suggestionText');
+            suggestedVal = "";
+            
+            if (!val) { suggestion.classList.add('hidden'); return; }
+            
+            // Common repeating decimals
+            const num = parseFloat(val);
+            if (isNaN(num)) return;
+
+            const map = [
+                { val: 0.333, target: "1/3" }, { val: 0.666, target: "2/3" },
+                { val: 0.667, target: "2/3" }, { val: 0.166, target: "1/6" },
+                { val: 0.167, target: "1/6" }, { val: 0.833, target: "5/6" },
+                { val: 0.111, target: "1/9" }, { val: 0.222, target: "2/9" },
+                { val: 0.444, target: "4/9" }, { val: 0.555, target: "5/9" },
+                { val: 0.777, target: "7/9" }, { val: 0.888, target: "8/9" }
+            ];
+
+            const found = map.find(item => Math.abs(num - item.val) < 0.01 || val.includes(item.val.toString().substring(1)));
+            
+            if (found) {
+                suggestedVal = found.target;
+                text.innerText = `Gợi ý: ${found.target}?`;
+                suggestion.classList.remove('hidden');
+            } else {
+                suggestion.classList.add('hidden');
+            }
+        }
+
+        function applySuggestion() {
+            if (suggestedVal) {
+                const input = document.getElementById('inputVal');
+                input.value = suggestedVal;
+                updateMathPreview(suggestedVal);
+                document.getElementById('smartSuggestion').classList.add('hidden');
+                input.focus();
+            }
         }
 
         function clearInput() {
             document.getElementById('inputVal').value = '';
+            updateMathPreview('');
             checkInput();
+            document.getElementById('smartSuggestion').classList.add('hidden');
             document.getElementById('inputVal').focus();
         }
+        
+        function toggleSettings() { document.getElementById('settingsModal').classList.toggle('hidden'); }
+        function toggleRules() { document.getElementById('rulesModal').classList.toggle('hidden'); }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            toastMsg.innerText = msg;
-            toast.classList.remove('opacity-0', 'translate-y-10');
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-10');
-            }, 2000);
-        }
-
-        function addToHistory(input, resultStr) {
-            // Avoid duplicates at the top of the stack
-            if (historyData.length > 0 && historyData[0].input === input) return;
-
-            historyData.unshift({ input, result: resultStr });
-            if (historyData.length > 10) historyData.pop();
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const section = document.getElementById('historySection');
-            const list = document.getElementById('historyList');
-            
-            if (historyData.length === 0) {
-                section.classList.add('hidden');
-                return;
-            }
-            
-            section.classList.remove('hidden');
-            list.innerHTML = '';
-            
-            historyData.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 hover:border-brand-blue/30 transition-colors text-base";
-                div.innerHTML = `
-                    <div class="flex items-center gap-3 overflow-hidden">
-                        <span class="font-bold text-brand-blue w-16 text-right">${item.input}</span>
-                        <i class="fa-solid fa-arrow-right text-slate-300 text-xs"></i>
-                        <span class="text-slate-600 truncate font-mono text-sm">${item.result}</span>
-                    </div>
-                    <button onclick="navigator.clipboard.writeText('${item.result}'); showToast('Đã copy lịch sử!')" class="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-50 transition-colors" title="Copy lại">
-                        <i class="fa-regular fa-copy"></i>
-                    </button>
-                `;
-                list.appendChild(div);
+        function setDelimiter(char) {
+            delimiter = char;
+            document.querySelectorAll('.delim-btn').forEach(b => {
+                b.classList.remove('bg-blue-50', 'border-brand-blue', 'text-brand-blue', 'dark:bg-blue-900/30', 'dark:border-blue-500', 'dark:text-blue-300');
+                b.classList.add('border-slate-200', 'dark:border-slate-700');
             });
+            const activeBtn = document.getElementById(`delim_${char}`);
+            activeBtn.classList.add('bg-blue-50', 'border-brand-blue', 'text-brand-blue', 'dark:bg-blue-900/30', 'dark:border-blue-500', 'dark:text-blue-300');
+            activeBtn.classList.remove('border-slate-200', 'dark:border-slate-700');
+            
+            if (!document.getElementById('outputSection').classList.contains('hidden')) {
+                if (currentMode === 'single') generateAnswers();
+                else generateBatchAnswers();
+            }
         }
 
-        function clearHistory() {
-            historyData = [];
-            renderHistory();
+        // --- Keyboard Shortcuts ---
+        function checkShortcuts(e, context) {
+            if (e.key === 'Enter') {
+                if (e.ctrlKey || e.metaKey) {
+                    // Ctrl+Enter: Always try to generate batch if in batch mode
+                    if (currentMode === 'batch') {
+                        e.preventDefault();
+                        generateBatchAnswers();
+                    }
+                } else if (context === 'single') {
+                    // Plain Enter in single input
+                    generateAnswers();
+                }
+            }
         }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!document.getElementById('settingsModal').classList.contains('hidden')) toggleSettings();
+                else if (!document.getElementById('rulesModal').classList.contains('hidden')) toggleRules();
+                else if (currentMode === 'single') clearInput();
+            }
+        });
 
-        function generateAnswers() {
-            const inputEl = document.getElementById('inputVal');
-            const input = inputEl.value.trim();
-            const outputSection = document.getElementById('outputSection');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            const gridList = document.getElementById('gridList');
-            const resultString = document.getElementById('resultString');
+        // --- Core Logic ---
+        function getGcd(a, b) { return b == 0 ? a : getGcd(b, a % b); }
 
-            // Reset UI
-            errorMessage.classList.add('hidden');
-            outputSection.classList.add('hidden');
-            gridList.innerHTML = '';
+        function solveSingleValue(input) {
+            input = input.trim();
+            if (!input) return null;
 
-            if (!input) return;
-
-            // 1. Parse Input
-            let val;
-            let isFraction = input.includes('/');
+            let val, isFraction = input.includes('/');
+            let num, den;
             
             try {
                 if (isFraction) {
                     const parts = input.split('/');
-                    if (parts.length !== 2) throw new Error("Định dạng phân số không hợp lệ (VD: 2/3)");
-                    const num = parseFloat(parts[0]);
-                    const den = parseFloat(parts[1]);
-                    if (den === 0) throw new Error("Mẫu số không thể bằng 0");
-                    if (isNaN(num) || isNaN(den)) throw new Error("Tử và mẫu phải là số");
+                    if (parts.length !== 2) throw new Error("Format lỗi");
+                    num = parseFloat(parts[0]); den = parseFloat(parts[1]);
+                    if (den === 0) throw new Error("Mẫu = 0");
+                    if (isNaN(num) || isNaN(den)) throw new Error("NaN");
                     val = num / den;
                 } else {
                     val = parseFloat(input);
+                    if (isNaN(val)) throw new Error("NaN");
                 }
-                
-                if (isNaN(val)) throw new Error("Giá trị nhập không phải là số hợp lệ");
             } catch (e) {
-                errorText.innerText = e.message || "Vui lòng kiểm tra lại giá trị nhập.";
-                errorMessage.classList.remove('hidden');
-                return;
+                return { error: e.message, input };
             }
 
-            // 2. SAT Logic Constraints
             const isNegative = val < 0;
             const maxLength = isNegative ? 6 : 5; 
             const validAnswers = new Set();
 
-            // A. Add Fraction Form
             if (isFraction) {
-                const cleanFraction = input.replace(/\s/g, '');
-                if (cleanFraction.length <= maxLength) {
-                    validAnswers.add(cleanFraction);
+                if (Number.isInteger(num) && Number.isInteger(den)) {
+                    const gcd = getGcd(Math.abs(num), Math.abs(den));
+                    const simplified = `${num/gcd}/${den/gcd}`;
+                    if (simplified.length <= maxLength) validAnswers.add(simplified);
+                } else {
+                    const clean = input.replace(/\s/g, '');
+                    if (clean.length <= maxLength) validAnswers.add(clean);
                 }
             } else {
                 if (Number.isInteger(val)) {
-                    const intStr = val.toString();
-                    if (intStr.length <= maxLength) validAnswers.add(intStr);
+                    if (val.toString().length <= maxLength) validAnswers.add(val.toString());
+                } else {
+                     // Try Dec -> Frac
+                    const tolerance = 1.0E-6;
+                    for (let d = 2; d <= 99; d++) {
+                        let n = Math.round(val * d);
+                        if (Math.abs(val - n/d) < tolerance) {
+                             const gcd = getGcd(Math.abs(n), d);
+                             const simp = `${n/gcd}/${d/gcd}`;
+                             if (simp.length <= maxLength) validAnswers.add(simp);
+                             break;
+                        }
+                    }
                 }
             }
 
-            // B. Add Decimal Forms
             let exactStr = val.toString();
             if (exactStr.length <= maxLength) {
                 validAnswers.add(exactStr);
-                // .5 instead of 0.5
-                if (Math.abs(val) < 1 && exactStr.includes('0.')) {
-                     validAnswers.add(exactStr.replace('0.', '.'));
-                }
+                if (Math.abs(val) < 1 && exactStr.includes('0.')) validAnswers.add(exactStr.replace('0.', '.'));
             } else {
-                // Generate variations
                 for (let p = 0; p <= 6; p++) {
                     let rounded = val.toFixed(p);
                     let fullString = val.toString(); 
-                    
                     let formsToCheck = [rounded];
-
-                    // Add simple truncation by string length
-                    if (fullString.length > maxLength) {
-                        formsToCheck.push(fullString.substring(0, maxLength));
-                    }
+                    if (fullString.length > maxLength) formsToCheck.push(fullString.substring(0, maxLength));
                     
-                    // Add "No Zero" variations (.666)
                     if (Math.abs(val) < 1 && Math.abs(val) > 0) {
                          let noZeroRounded = rounded.replace('0.', '.');
                          if (isNegative) noZeroRounded = rounded.replace('-0.', '-.');
@@ -477,132 +656,178 @@
                          const sign = isNegative ? "-" : "";
                          let decimalPart = Math.abs(val).toString().split('.')[1] || "";
                          let constructed = sign + "." + decimalPart;
-                         if (constructed.length > maxLength) {
-                             formsToCheck.push(constructed.substring(0, maxLength));
-                         }
+                         if (constructed.length > maxLength) formsToCheck.push(constructed.substring(0, maxLength));
                     }
 
                     formsToCheck.forEach(str => {
-                        if (str.length === maxLength) {
-                            validAnswers.add(str);
-                        } else if (str.length < maxLength) {
-                            if (Math.abs(parseFloat(str) - val) < 0.0000001 || parseFloat(str) === val) {
-                                validAnswers.add(str);
-                            }
+                        if (str.length === maxLength) validAnswers.add(str);
+                        else if (str.length < maxLength) {
+                            if (Math.abs(parseFloat(str) - val) < 0.0000001 || parseFloat(str) === val) validAnswers.add(str);
                         }
                     });
                 }
             }
 
-            // 3. Output Generation & Sort
             let sortedAnswers = Array.from(validAnswers).sort((a, b) => {
-                // Priority: Fraction -> Standard Decimal -> No-Zero Decimal -> Length
-                if (a.includes('/')) return -1;
-                if (b.includes('/')) return 1;
+                if (a.includes('/') && !b.includes('/')) return -1;
+                if (!a.includes('/') && b.includes('/')) return 1;
                 if (a.startsWith('0') && !b.startsWith('0')) return -1;
                 return a.length - b.length;
             });
-            
-            // Cleanup weird artifacts
             sortedAnswers = sortedAnswers.filter(s => s !== '-' && s !== '-.' && s !== '.' && !isNaN(parseFloat(s)));
-
-            const resultText = sortedAnswers.join('//');
-            resultString.value = resultText;
             
-            // Generate Visual Grids
-            sortedAnswers.forEach((ans, index) => {
-                // Container for each row
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-brand-blue hover:shadow-lg transition-all cursor-pointer group active:scale-[0.99]";
-                row.style.animationDelay = `${index * 60}ms`;
-                row.onclick = () => {
-                    navigator.clipboard.writeText(ans);
-                    showToast(`Đã copy: ${ans}`);
-                };
-                row.title = "Bấm để copy phương án này";
-
-                // Left: Grid Visual
-                const gridContainer = document.createElement('div');
-                gridContainer.className = "flex gap-2"; 
-                
-                const chars = ans.split('');
-                const emptySlots = (isNegative ? 6 : 5) - chars.length;
-                
-                // Filled chars
-                chars.forEach(char => {
-                    const box = document.createElement('div');
-                    box.className = "grid-box filled group-hover:border-brand-blue group-hover:bg-blue-50";
-                    box.innerText = char;
-                    gridContainer.appendChild(box);
-                });
-                
-                // Empty slots
-                for(let i=0; i<emptySlots; i++) {
-                     const box = document.createElement('div');
-                    box.className = "grid-box border-slate-200 bg-slate-50 text-transparent opacity-50";
-                    gridContainer.appendChild(box);
-                }
-
-                // Right: Metadata Badge
-                const info = document.createElement('div');
-                info.className = "text-right flex flex-col items-end";
-                
-                let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
-                let desc = "Exact Value";
-                let icon = '<i class="fa-solid fa-check-circle"></i>';
-                
-                if (ans.includes('/')) { 
-                    desc = "Phân số"; 
-                    badgeClass = "bg-brand-blue/10 text-brand-blue border-brand-blue/20"; 
-                    icon = '<i class="fa-solid fa-percent"></i>';
-                }
-                else if (ans.startsWith('.')) { 
-                    desc = "No Lead Zero"; 
-                    badgeClass = "bg-purple-50 text-purple-600 border-purple-100"; 
-                    icon = '<i class="fa-solid fa-compress"></i>';
-                }
-                else if (ans.length === maxLength) { 
-                    desc = "Fill Box"; 
-                    badgeClass = "bg-amber-50 text-amber-700 border-amber-100"; 
-                    icon = '<i class="fa-solid fa-maximize"></i>';
-                }
-                
-                info.innerHTML = `
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${badgeClass} mb-1 transition-colors">
-                        ${icon} ${desc}
-                    </span>
-                    <span class="text-xs text-slate-400 group-hover:text-brand-blue transition-colors flex items-center gap-1">
-                        <i class="fa-regular fa-copy opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                        Click to Copy
-                    </span>
-                `;
-
-                row.appendChild(gridContainer);
-                row.appendChild(info);
-                
-                gridList.appendChild(row);
-            });
-
-            outputSection.classList.remove('hidden');
-            addToHistory(input, resultText);
+            return {
+                input,
+                answers: sortedAnswers,
+                isFraction,
+                isNegative,
+                val,
+                error: null
+            };
         }
 
-        function copyToClipboard() {
-            const copyText = document.getElementById("resultString");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); 
-            document.execCommand("copy");
+        // --- Render Logic ---
+        function renderResultCard(data, index) {
+            if (data.error) {
+                return `
+                <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-200 dark:border-red-800 flex items-center gap-3">
+                    <span class="font-bold text-slate-700 dark:text-slate-300 w-16">${data.input}</span>
+                    <i class="fa-solid fa-arrow-right text-slate-300"></i>
+                    <span class="text-red-500 font-bold">Lỗi: ${data.error}</span>
+                </div>`;
+            }
+
+            const resultStr = data.answers.join(delimiter);
+            const gridHtml = data.answers.map(ans => {
+                const chars = ans.split('');
+                const emptySlots = (data.isNegative ? 6 : 5) - chars.length;
+                let boxes = chars.map(c => `<div class="grid-box filled">${c}</div>`).join('');
+                boxes += Array(Math.max(0, emptySlots)).fill(`<div class="grid-box opacity-50 bg-slate-50 border-slate-200"></div>`).join('');
+                return `<div class="flex gap-1" title="${ans}">${boxes}</div>`;
+            }).join('');
+
+            return `
+            <div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-1 border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up result-item" style="animation-delay: ${index * 50}ms">
+                <div class="bg-white dark:bg-slate-900 rounded-xl p-6">
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                        <div class="flex items-center gap-3">
+                             <div class="bg-brand-blue text-white px-3 py-1 rounded-lg font-bold text-lg shadow-sm flex items-center justify-center min-w-[3rem]">${data.input}</div>
+                            <i class="fa-solid fa-arrow-right text-slate-300"></i>
+                        </div>
+                        <div class="relative group w-full md:w-auto flex-1">
+                            <input readonly value="${resultStr}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 font-mono text-slate-700 dark:text-slate-300 text-sm focus:outline-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onclick="copyText(this, true)">
+                            <button class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-blue no-print" onclick="copyText(this.previousElementSibling, true)">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4 overflow-x-auto pb-2">
+                        ${gridHtml}
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // --- Main Functions ---
+        function generateAnswers() {
+            const input = document.getElementById('inputVal').value;
+            if (!input) return;
             
-            showToast("Đã copy toàn bộ kết quả!");
+            const container = document.getElementById('resultsContainer');
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('smartSuggestion').classList.add('hidden');
             
-            const status = document.getElementById("copyStatus");
-            status.classList.remove("opacity-0", "translate-y-2");
-            status.classList.add("translate-y-0");
+            const result = solveSingleValue(input);
+            if (result.error) {
+                document.getElementById('errorText').innerText = result.error;
+                document.getElementById('errorMessage').classList.remove('hidden');
+                container.innerHTML = '';
+            } else {
+                container.innerHTML = renderResultCard(result, 0);
+                addToHistory(result.input, result.answers.join(delimiter));
+            }
+        }
+
+        function generateBatchAnswers() {
+            const raw = document.getElementById('batchInputVal').value;
+            if (!raw.trim()) return;
             
-            setTimeout(() => {
-                status.classList.add("opacity-0", "translate-y-2");
-                status.classList.remove("translate-y-0");
-            }, 2500);
+            const lines = raw.split(/[\n]+/).map(s => s.trim()).filter(s => s); 
+            const container = document.getElementById('resultsContainer');
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('batchActions').classList.remove('hidden');
+            document.getElementById('resultCount').innerText = lines.length;
+            container.innerHTML = '';
+            
+            lines.forEach((line, idx) => {
+                const result = solveSingleValue(line);
+                if (result) {
+                    container.innerHTML += renderResultCard(result, idx);
+                    if (!result.error) addToHistory(result.input, result.answers.join(delimiter));
+                }
+            });
+        }
+        
+        function copyAllBatch() {
+             const inputs = document.querySelectorAll('.result-item input[readonly]');
+             if(inputs.length === 0) return;
+             let text = "";
+             inputs.forEach(inp => text += inp.value + "\n");
+             navigator.clipboard.writeText(text);
+             showToast("Đã copy toàn bộ danh sách cho Excel!");
+        }
+
+        // --- Utilities ---
+        function copyText(el, withConfetti = false) {
+            let text = el.value || el;
+            navigator.clipboard.writeText(text);
+            showToast('Đã copy!');
+            
+            if (withConfetti) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#1e3a8a', '#d97706', '#3b82f6']
+                });
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-10');
+            setTimeout(() => toast.classList.add('opacity-0', 'translate-y-10'), 2000);
+        }
+
+        function addToHistory(input, resultStr) {
+            if (historyData.length > 0 && historyData[0].input === input) return;
+            historyData.unshift({ input, result: resultStr });
+            renderHistory();
+        }
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            const section = document.getElementById('historySection');
+            if(historyData.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden');
+            list.innerHTML = historyData.map(item => `
+                <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700 text-sm">
+                    <span class="font-bold text-brand-blue dark:text-blue-300 w-12 text-right">${item.input}</span>
+                    <span class="text-slate-500 truncate font-mono mx-2 flex-1">${item.result}</span>
+                    <button onclick="copyText('${item.result}')" class="text-slate-400 hover:text-brand-blue"><i class="fa-regular fa-copy"></i></button>
+                </div>
+            `).join('');
+        }
+        function clearHistory() { historyData = []; renderHistory(); }
+        function exportHistory() {
+            if (historyData.length === 0) return showToast("Không có dữ liệu!");
+            let content = "SAT GRID-IN HISTORY\n===================\n";
+            historyData.forEach(item => content += `In: ${item.input} | Out: ${item.result}\n`);
+            const url = window.URL.createObjectURL(new Blob([content], {type: 'text/plain'}));
+            const a = document.createElement('a'); a.href = url; a.download = `SAT_Log_${Date.now()}.txt`;
+            a.click();
         }
     </script>
 </body>
